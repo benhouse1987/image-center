@@ -72,7 +72,40 @@ Upload an image to get its fingerprint.
     curl -X POST -F "file=@/path/to/your/image.jpg" http://localhost:8080/api/image/fingerprint
     ```
 
-### 2. Calculate Similarity Between Two Fingerprints
+### 2. Calculate Image Fingerprint from Local Path
+
+Calculate the fingerprint of an image stored on the local server.
+
+-   **URL:** `/api/image/fingerprint-local`
+-   **Method:** `POST`
+-   **Content-Type:** `application/json`
+-   **Request Body:**
+    ```json
+    {
+        "filePath": "/path/to/your/image_on_server.jpg"
+    }
+    ```
+
+-   **Success Response (200 OK):**
+    ```json
+    {
+        "fingerprint": "hexadecimal_fingerprint_string"
+    }
+    ```
+
+-   **Error Responses:**
+    -   `400 Bad Request`: If the `filePath` is missing or empty.
+    -   `404 Not Found`: If the file specified by `filePath` does not exist.
+    -   `500 Internal Server Error`: If there's an issue processing the image.
+
+-   **Example using `curl`:**
+    ```bash
+    curl -X POST -H "Content-Type: application/json" \
+    -d '{"filePath": "/path/on/server/image.png"}' \
+    http://localhost:8080/api/image/fingerprint-local
+    ```
+
+### 3. Calculate Similarity Between Two Fingerprints
 
 Provide two image fingerprints (obtained from the endpoint above) to calculate their similarity.
 
@@ -116,8 +149,14 @@ Provide two image fingerprints (obtained from the endpoint above) to calculate t
     http://localhost:8080/api/image/similarity
     ```
 
+## Logging
+
+-   The application uses Logback for logging.
+-   Logs are output to both the console and a file located at `logs/image-fingerprint-service.log`.
+-   Log files are rolled over daily or when they reach 10MB, with archives stored in `logs/archived/`.
+-   The application's specific logs (`com.example.imagefingerprint`) are set to `TRACE` level, while the root logger is `INFO`.
+
 ## Notes
 
 -   The hashing algorithm used is AverageHash (aHash) with a 64-bit hash.
 -   The similarity score is calculated as `1.0 - normalizedHammingDistance`. A score of `1.0` indicates the images are likely identical according to the hash, while `0.0` indicates they are very different.
--   For production use, consider a more robust logging mechanism than `e.printStackTrace()`.

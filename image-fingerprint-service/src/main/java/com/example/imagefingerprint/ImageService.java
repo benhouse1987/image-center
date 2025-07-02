@@ -3,39 +3,57 @@ package com.example.imagefingerprint;
 import dev.brachtendorf.jimagehash.hash.Hash;
 import dev.brachtendorf.jimagehash.hashAlgorithms.AverageHash;
 import dev.brachtendorf.jimagehash.hashAlgorithms.HashingAlgorithm;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
 @Service
 public class ImageService {
 
+    private static final Logger logger = LoggerFactory.getLogger(ImageService.class);
     private final HashingAlgorithm hasher = new AverageHash(64); // Using AverageHash with a 64-bit hash
+
+    public String calculateFingerprint(String filePath) throws IOException {
+        if (filePath == null || filePath.trim().isEmpty()) {
+            throw new IllegalArgumentException("File path cannot be null or empty.");
+        }
+        try (InputStream imageStream = new FileInputStream(filePath)) {
+            return calculateFingerprint(imageStream);
+        } catch (FileNotFoundException e) {
+            logger.error("File not found at path: {}", filePath, e);
+            throw e; // Re-throw to be handled by controller
+        }
+    }
 
     public String calculateFingerprint(InputStream imageStream) throws IOException {
         if (imageStream == null) {
+            // This case should ideally be handled by the caller if it's an internal call
+            // For external calls like controller, it's fine.
             throw new IllegalArgumentException("Image stream cannot be null.");
         }
         try {
             BufferedImage image = ImageIO.read(imageStream);
             if (image == null) {
-                throw new IOException("Could not decode image from stream. The image format might not be supported or the stream is invalid.");
+                // This can happen if the stream is empty, not an image, or an unsupported format
+                throw new IOException("Could not decode image from stream. The image format might not be supported or the stream is invalid/empty.");
             }
             Hash hash = hasher.hash(image);
             return hash.getHashValue().toString(16); // Return hash as a hex string
         } finally {
-            if (imageStream != null) {
-                try {
-                    imageStream.close();
-                } catch (IOException e) {
-                    // Log this or handle more gracefully if necessary
-                    System.err.println("Failed to close image stream: " + e.getMessage());
-                }
+            // InputStream is managed by try-with-resources in the filePath version
+            // For direct InputStream version, the caller should manage the stream if it needs to be closed by them.
+            // However, if this method is always called with streams that *it* should close, then:
+            try {
+                imageStream.close();
+            } catch (IOException e) {
+                logger.warn("Failed to close image stream: {}", e.getMessage(), e);
             }
         }
     }
