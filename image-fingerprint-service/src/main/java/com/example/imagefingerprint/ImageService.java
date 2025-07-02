@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -22,14 +23,27 @@ public class ImageService {
     private static final int TOTAL_BITS = HASH_WIDTH * HASH_HEIGHT;
 
     private static BufferedImage resizeAndGrayscale(BufferedImage originalImage) throws IOException {
-        BufferedImage resizedImage = Thumbnails.of(originalImage)
+        BufferedImage thumbnailImage = Thumbnails.of(originalImage)
                 .size(HASH_WIDTH, HASH_HEIGHT)
-                .imageType(BufferedImage.TYPE_BYTE_GRAY) // Convert to grayscale during resize
+                // Requesting TYPE_BYTE_GRAY here is good, but we will ensure it by drawing onto a new image.
+                .imageType(BufferedImage.TYPE_BYTE_GRAY)
                 .asBufferedImage();
-        if (resizedImage == null) {
-            throw new IOException("Resizing or grayscaling failed, thumbnailator returned null.");
+
+        if (thumbnailImage == null) {
+            throw new IOException("Resizing or grayscaling with Thumbnailator failed, returned null.");
         }
-        return resizedImage;
+
+        // Normalize the image by drawing it onto a new BufferedImage of the exact desired type and size.
+        // This can help prevent issues with unconventional rasters from the original or thumbnailing process.
+        BufferedImage finalImage = new BufferedImage(HASH_WIDTH, HASH_HEIGHT, BufferedImage.TYPE_BYTE_GRAY);
+        Graphics2D g = finalImage.createGraphics();
+        try {
+            g.drawImage(thumbnailImage, 0, 0, HASH_WIDTH, HASH_HEIGHT, null);
+        } finally {
+            g.dispose();
+        }
+
+        return finalImage;
     }
 
     private static String calculateBinaryHash(BufferedImage grayscaleImage) {
