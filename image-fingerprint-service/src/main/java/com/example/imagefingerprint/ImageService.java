@@ -21,7 +21,7 @@ public class ImageService {
     private static final int HASH_HEIGHT = 8;
     private static final int TOTAL_BITS = HASH_WIDTH * HASH_HEIGHT;
 
-    private BufferedImage resizeAndGrayscale(BufferedImage originalImage) throws IOException {
+    private static BufferedImage resizeAndGrayscale(BufferedImage originalImage) throws IOException {
         BufferedImage resizedImage = Thumbnails.of(originalImage)
                 .size(HASH_WIDTH, HASH_HEIGHT)
                 .imageType(BufferedImage.TYPE_BYTE_GRAY) // Convert to grayscale during resize
@@ -32,7 +32,7 @@ public class ImageService {
         return resizedImage;
     }
 
-    private String calculateBinaryHash(BufferedImage grayscaleImage) {
+    private static String calculateBinaryHash(BufferedImage grayscaleImage) {
         long sum = 0;
         for (int y = 0; y < HASH_HEIGHT; y++) {
             for (int x = 0; x < HASH_WIDTH; x++) {
@@ -50,7 +50,7 @@ public class ImageService {
         return hashBuilder.toString();
     }
 
-    private String binaryToHex(String binaryString) {
+    private static String binaryToHex(String binaryString) {
         // Ensure the binary string length is a multiple of 4 for direct hex conversion
         // Pad with leading zeros if necessary, though for 64 bits it should be fine.
         if (binaryString.length() % 4 != 0) {
@@ -71,23 +71,23 @@ public class ImageService {
         return hex;
     }
 
-    public String calculateFingerprint(String filePath) throws IOException {
+    public static String calculateFingerprint(String filePath){
         if (filePath == null || filePath.trim().isEmpty()) {
             throw new IllegalArgumentException("File path cannot be null or empty.");
         }
         try (InputStream imageStream = new FileInputStream(filePath)) {
             return processImageStream(imageStream, "file path: " + filePath);
-        } catch (FileNotFoundException e) {
-            logger.error("File not found at path: {}", filePath, e);
-            throw e;
+        } catch (Exception e) {
+            logger.error("Error: {}", filePath, e);
+            throw new RuntimeException(e);
         }
     }
 
-    public String calculateFingerprint(InputStream imageStream) throws IOException {
+    public static String calculateFingerprint(InputStream imageStream) throws IOException {
         return processImageStream(imageStream, "input stream");
     }
 
-    private String processImageStream(InputStream imageStream, String imageSourceDescription) throws IOException {
+    private static String processImageStream(InputStream imageStream, String imageSourceDescription) throws IOException {
         if (imageStream == null) {
             throw new IllegalArgumentException("Image stream cannot be null for " + imageSourceDescription);
         }
@@ -146,5 +146,9 @@ public class ImageService {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid fingerprint format. Fingerprints must be valid hexadecimal strings.", e);
         }
+    }
+    public static void main(String[] args){
+        String hash1=   calculateFingerprint("C:\\Users\\Administrator\\Downloads\\testpic\\1.JPG");
+        logger.info("hash1 {}",hash1);
     }
 }
