@@ -33,10 +33,14 @@ public class ImageService {
     }
 
     private static String calculateBinaryHash(BufferedImage grayscaleImage) {
+        // grayscaleImage is expected to be HASH_WIDTH x HASH_HEIGHT and TYPE_BYTE_GRAY
         long sum = 0;
         for (int y = 0; y < HASH_HEIGHT; y++) {
             for (int x = 0; x < HASH_WIDTH; x++) {
-                sum += grayscaleImage.getRaster().getSample(x, y, 0); // TYPE_BYTE_GRAY has one band
+                // Extract gray value. For TYPE_BYTE_GRAY, R, G, and B components are the same.
+                // getRGB() returns a packed sRGB value. We can extract one component.
+                // (grayscaleImage.getRGB(x, y) & 0xFF) would give the blue component, which is fine for gray.
+                sum += (grayscaleImage.getRGB(x, y) & 0xFF);
             }
         }
         long average = sum / TOTAL_BITS;
@@ -44,7 +48,7 @@ public class ImageService {
         StringBuilder hashBuilder = new StringBuilder(TOTAL_BITS);
         for (int y = 0; y < HASH_HEIGHT; y++) {
             for (int x = 0; x < HASH_WIDTH; x++) {
-                hashBuilder.append(grayscaleImage.getRaster().getSample(x, y, 0) > average ? '1' : '0');
+                hashBuilder.append((grayscaleImage.getRGB(x, y) & 0xFF) > average ? '1' : '0');
             }
         }
         return hashBuilder.toString();
