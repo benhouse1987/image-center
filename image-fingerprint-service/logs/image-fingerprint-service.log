@@ -1,0 +1,4 @@
+2025-07-02 07:20:39.423 [main] INFO  c.e.i.ImageFingerprintApplicationTests - Starting ImageFingerprintApplicationTests using Java 21.0.7 with PID 3150 (started by jules in /app/image-fingerprint-service)
+2025-07-02 07:20:39.425 [main] DEBUG c.e.i.ImageFingerprintApplicationTests - Running with Spring Boot v3.5.3, Spring v6.2.8
+2025-07-02 07:20:39.426 [main] INFO  c.e.i.ImageFingerprintApplicationTests - No active profile set, falling back to 1 default profile: "default"
+2025-07-02 07:20:40.994 [main] INFO  c.e.i.ImageFingerprintApplicationTests - Started ImageFingerprintApplicationTests in 2.373 seconds (process running for 3.987)

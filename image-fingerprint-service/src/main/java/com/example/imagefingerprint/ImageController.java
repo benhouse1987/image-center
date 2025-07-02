@@ -114,8 +114,7 @@ public class ImageController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            // Log the exception server-side for debugging
-            e.printStackTrace();
+            logger.error("An unexpected error occurred during similarity calculation.", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "An unexpected error occurred: " + e.getMessage()));
         }

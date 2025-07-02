@@ -36,9 +36,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>dev.brachtendorf</groupId>
-			<artifactId>jimagehash</artifactId>
-			<version>3.0.0</version>
+			<groupId>net.coobird</groupId>
+			<artifactId>thumbnailator</artifactId>
+			<version>0.4.20</version>
 		</dependency>
 
 		<dependency>

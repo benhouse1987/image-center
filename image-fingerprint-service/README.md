@@ -158,5 +158,7 @@ Provide two image fingerprints (obtained from the endpoint above) to calculate t
 
 ## Notes
 
--   The hashing algorithm used is AverageHash (aHash) with a 64-bit hash.
+-   The hashing algorithm used is a custom implementation of AverageHash (aHash).
+    -   Images are resized to 8x8 pixels and converted to grayscale using the `net.coobird:thumbnailator` library.
+    -   The hash is 64 bits long (16 hexadecimal characters).
 -   The similarity score is calculated as `1.0 - normalizedHammingDistance`. A score of `1.0` indicates the images are likely identical according to the hash, while `0.0` indicates they are very different.
