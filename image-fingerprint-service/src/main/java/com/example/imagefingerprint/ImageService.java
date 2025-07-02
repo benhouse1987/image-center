@@ -169,4 +169,86 @@ public class ImageService {
         String hash1=   calculateFingerprint("C:\\Users\\Administrator\\Downloads\\testpic\\1.JPG");
         logger.info("hash1 {}",hash1);
     }
+
+    /**
+     * A simple class to hold a pair of hashes.
+     */
+    public static class HashPair {
+        public final String hash1;
+        public final String hash2;
+        public final double similarity;
+
+        public HashPair(String hash1, String hash2, double similarity) {
+            this.hash1 = hash1;
+            this.hash2 = hash2;
+            this.similarity = similarity;
+        }
+
+        @Override
+        public String toString() {
+            return "HashPair{" +
+                    "hash1='" + hash1 + '\'' +
+                    ", hash2='" + hash2 + '\'' +
+                    ", similarity=" + similarity +
+                    '}';
+        }
+
+        // Optional: equals and hashCode if these pairs are stored in sets or used as map keys.
+        // For now, not strictly necessary for the requested functionality.
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            HashPair hashPair = (HashPair) o;
+            // Consider pairs (a,b) and (b,a) as equal if order doesn't matter.
+            // For now, strict equality.
+            return Double.compare(hashPair.similarity, similarity) == 0 &&
+                    ((hash1.equals(hashPair.hash1) && hash2.equals(hashPair.hash2)) ||
+                     (hash1.equals(hashPair.hash2) && hash2.equals(hashPair.hash1)));
+        }
+
+        @Override
+        public int hashCode() {
+            // Simple hash combining, order independent for hash1 and hash2
+            int h1 = hash1.hashCode();
+            int h2 = hash2.hashCode();
+            return (h1 < h2 ? java.util.Objects.hash(h1, h2, similarity) : java.util.Objects.hash(h2, h1, similarity));
+        }
+    }
+
+    /**
+     * Finds pairs of hashes from a list that have a similarity score above a given threshold.
+     *
+     * @param hashList The list of hash strings to compare.
+     * @param similarityThreshold The minimum similarity score for a pair to be included.
+     * @return A list of HashPair objects representing the similar hash pairs.
+     */
+    public static java.util.List<HashPair> findSimilarHashes(java.util.List<String> hashList, double similarityThreshold) {
+        java.util.List<HashPair> similarPairs = new java.util.ArrayList<>();
+        if (hashList == null || hashList.size() < 2) {
+            return similarPairs; // Not enough hashes to form a pair
+        }
+
+        for (int i = 0; i < hashList.size(); i++) {
+            for (int j = i + 1; j < hashList.size(); j++) {
+                String hash1 = hashList.get(i);
+                String hash2 = hashList.get(j);
+
+                // Basic validation for individual hashes can be done here if necessary,
+                // e.g., checking length or format, though calculateSimilarity also does this.
+                // For now, assume calculateSimilarity handles invalid hash formats by throwing an exception.
+                try {
+                    double similarity = calculateSimilarity(hash1, hash2);
+                    if (similarity > similarityThreshold) {
+                        similarPairs.add(new HashPair(hash1, hash2, similarity));
+                    }
+                } catch (IllegalArgumentException e) {
+                    // Log or handle invalid hash strings if needed, or let it propagate.
+                    // For now, we'll skip pairs with invalid hashes.
+                    logger.warn("Could not compare hashes '{}' and '{}' due to invalid format: {}", hash1, hash2, e.getMessage());
+                }
+            }
+        }
+        return similarPairs;
+    }
 }
