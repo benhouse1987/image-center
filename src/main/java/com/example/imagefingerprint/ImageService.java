@@ -116,7 +116,7 @@ public class ImageService {
             }
             BufferedImage grayscaleResizedImage = resizeAndGrayscale(originalImage);
             String binaryHash = calculateBinaryHash(grayscaleResizedImage);
-            return binaryToHex(binaryHash);
+            return binaryHash; // Return binary hash directly instead of converting to hex
         } finally {
             try {
                 imageStream.close();
@@ -126,49 +126,34 @@ public class ImageService {
         }
     }
 
-    public double calculateSimilarity(String fingerprint1Hex, String fingerprint2Hex) {
-        if (fingerprint1Hex == null || fingerprint1Hex.isEmpty() || fingerprint1Hex.length() != TOTAL_BITS / 4) {
+    public static double calculateSimilarity(String fingerprint1Binary, String fingerprint2Binary) {
+        if (fingerprint1Binary == null || fingerprint1Binary.isEmpty() || fingerprint1Binary.length() != TOTAL_BITS) {
             throw new IllegalArgumentException("Fingerprint 1 cannot be null, empty, or of incorrect length.");
         }
-        if (fingerprint2Hex == null || fingerprint2Hex.isEmpty() || fingerprint2Hex.length() != TOTAL_BITS / 4) {
+        if (fingerprint2Binary == null || fingerprint2Binary.isEmpty() || fingerprint2Binary.length() != TOTAL_BITS) {
             throw new IllegalArgumentException("Fingerprint 2 cannot be null, empty, or of incorrect length.");
         }
 
         try {
-            String binary1 = new BigInteger(fingerprint1Hex, 16).toString(2);
-            String binary2 = new BigInteger(fingerprint2Hex, 16).toString(2);
+            // Convert binary strings to long values for bitwise operations
+            long hash1 = new BigInteger(fingerprint1Binary, 2).longValue();
+            long hash2 = new BigInteger(fingerprint2Binary, 2).longValue();
 
-            // Pad with leading zeros to ensure fixed length for Hamming distance
-            while (binary1.length() < TOTAL_BITS) {
-                binary1 = "0" + binary1;
-            }
-            while (binary2.length() < TOTAL_BITS) {
-                binary2 = "0" + binary2;
-            }
+            // XOR the two hashes to get bits that differ
+            long xorResult = hash1 ^ hash2;
 
-            if (binary1.length() != binary2.length()) {
-                 // This should not happen if hex fingerprints were of correct length and padded correctly
-                throw new IllegalArgumentException("Binary fingerprints have different lengths after conversion, which is unexpected.");
-            }
+            // Count the number of 1 bits in the XOR result (Hamming distance)
+            int hammingDistance = Long.bitCount(xorResult);
 
-            int hammingDistance = 0;
-            for (int i = 0; i < TOTAL_BITS; i++) {
-                if (binary1.charAt(i) != binary2.charAt(i)) {
-                    hammingDistance++;
-                }
-            }
-
+            // Calculate similarity as 1 - (hamming distance / total bits)
             double normalizedDistance = (double) hammingDistance / TOTAL_BITS;
             return 1.0 - normalizedDistance;
 
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid fingerprint format. Fingerprints must be valid hexadecimal strings.", e);
+            throw new IllegalArgumentException("Invalid fingerprint format. Fingerprints must be valid binary strings.", e);
         }
     }
-    public static void main(String[] args){
-        String hash1=   calculateFingerprint("C:\\Users\\Administrator\\Downloads\\testpic\\1.JPG");
-        logger.info("hash1 {}",hash1);
-    }
+   
 
     /**
      * A simple class to hold a pair of hashes.
@@ -250,5 +235,15 @@ public class ImageService {
             }
         }
         return similarPairs;
+    }
+
+    public static void main(String[] args){
+        String hash1=   calculateFingerprint("C:\\Users\\Administrator\\Downloads\\testpic\\3.JPG");
+        String hash2=   calculateFingerprint("C:\\Users\\Administrator\\Downloads\\testpic\\4.JPG");
+        logger.info("hash1 {}",hash1);
+        logger.info("hash2 {}",hash2);
+        double similarity=calculateSimilarity(hash1, hash2);
+        logger.info("similarity {}",similarity);
+        
     }
 }
